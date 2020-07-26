@@ -8,10 +8,21 @@ use ux::u30;
 //     fn decode(chrs: (char,char,char)) -> Vec<u8>;
 // }
 
+pub struct BaseU64();
+impl BaseU64 {
+    // Takes 3 bytes at a time and then converts them to 3 utf-8 1 byte characters each with 64 possibilities.
+    pub fn encode(bts: &[u8]) -> (char, char, char) {
+        BaseU256::encode(bts)
+    }
+    pub fn decode(chrs: (char, char, char)) -> Vec<u8> {
+        BaseU256::decode(chrs)
+    }
+}
+
 pub struct BaseU256();
 // impl TriByteEncoder for BaseU256 {
 impl BaseU256 {
-    // Takes 3 bytes at a time and then converts them to 3 utf-8 2 byte characters each with 256 possibilities.
+    // Takes 3 bytes at a time and then converts them to 3 utf-8 1 to 2 byte characters each with 256 possibilities.
     pub fn encode(bts: &[u8]) -> (char, char, char) {
         let mut iter_expr = bts.iter().take(3).map(|c| CHAR1024[*c as usize]);
         (
@@ -38,7 +49,7 @@ impl BaseU256 {
 
 pub struct BaseU1024();
 impl BaseU1024 {
-    // Takes 30 bits at a time and then converts them to 3 utf-8 2 byte characters each with 1024 possibilities.
+    // Takes 30 bits at a time and then converts them to 3 utf-8 1 to 2 byte characters each with 1024 possibilities.
     // Top 2 bits are unused => 30 bits.
     pub fn encode(bts: u30) -> (char, char, char) {
         // // Drop whatever the top 2 bits would have been.
@@ -77,46 +88,63 @@ impl BaseU1024 {
 
 #[cfg(test)]
 mod tests {
-    use super::{BaseU1024, BaseU256};
+    use super::{BaseU64, BaseU1024, BaseU256};
     use ux::u30;
+
+    #[test]
+    fn base_u64_encodes() {
+        let f3 = BaseU64::encode(&[0, 1, 2]);
+        assert_eq!(('A', 'B', 'C',), f3);
+
+        let mid = BaseU64::encode(&[12, 42, 63]);
+        assert_eq!(('M', 'q', '/',), mid);
+    }
+    #[test]
+    fn base_u64_decodes() {
+        let f3 = BaseU64::decode(('A', 'B', 'C'));
+        assert_eq!(&[0, 1, 2], f3.as_slice());
+
+        let mid = BaseU64::decode(('M', 'q', '/'));
+        assert_eq!(&[12, 42, 63], mid.as_slice());
+    }
 
     #[test]
     fn base_u256_encodes() {
         let f3 = BaseU256::encode(&[0, 1, 2]);
-        assert_eq!(('¡', '¢', '£',), f3);
+        assert_eq!(('A', 'B', 'C',), f3);
 
         let mid = BaseU256::encode(&[112, 42, 255]);
-        assert_eq!(('Ē', 'Ì', 'ơ',), mid);
+        assert_eq!(('Ò', 'q', 'š',), mid);
     }
     #[test]
     fn base_u256_decodes() {
-        let f3 = BaseU256::decode(('¡', '¢', '£'));
+        let f3 = BaseU256::decode(('A', 'B', 'C'));
         assert_eq!(&[0, 1, 2], f3.as_slice());
 
-        let mid = BaseU256::decode(('Ē', 'Ì', 'ơ'));
+        let mid = BaseU256::decode(('Ò', 'q', 'š'));
         assert_eq!(&[112, 42, 255], mid.as_slice());
     }
 
     #[test]
     fn base_u1024_encodes() {
         let s1 = BaseU1024::encode(u30::new(1026));
-        assert_eq!(('¡', '¢', '£',), s1);
+        assert_eq!(('A', 'B', 'C',), s1);
 
         let s2 = BaseU1024::encode(u30::new((112 << 20) + (42 << 10) + 255));
-        assert_eq!(('Ē', 'Ì', 'ơ',), s2);
+        assert_eq!(('Ò', 'q', 'š',), s2);
 
         let max = BaseU1024::encode(u30::new(1073741823));
-        assert_eq!(('֊', '֊', '֊',), max);
+        assert_eq!(('Ձ', 'Ձ', 'Ձ',), max);
 
         let mid = BaseU1024::encode(u30::new(536870912));
-        assert_eq!(('˄', '¡', '¡',), mid);
+        assert_eq!(('ɯ', 'A', 'A',), mid);
     }
     #[test]
     fn base_u1024_decodes() {
-        let f3 = BaseU1024::decode(('¡', '¢', '£'));
+        let f3 = BaseU1024::decode(('A', 'B', 'C'));
         assert_eq!(u30::new(1026), f3);
 
-        let mid = BaseU1024::decode(('Ē', 'Ì', 'ơ'));
+        let mid = BaseU1024::decode(('Ò', 'q', 'š'));
         assert_eq!(u30::new((112 << 20) + (42 << 10) + 255), mid);
     }
 }
