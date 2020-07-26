@@ -1,0 +1,13 @@
+[package]
+name = "base_u256"
+version = "0.1.0"
+authors = ["Andras Mocsary <nobody@reedwolf.com>"]
+edition = "2018"
+repository = "https://github.com/mocsy/base_u256"
+documentation = "https://docs.rs/base_u256"
+license = "MIT OR Apache-2.0"
+description = "base-u256 is to utf-8 as base-64 is to ascii"
+publish = true
+
+[dependencies]
+ux = "0.1.3"
