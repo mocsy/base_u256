@@ -19,7 +19,7 @@ The encoded bytes is exactly two times larger than the original binary.
 # base-u1024 encode/decode
 base-u1024 takes 30 bits at a time and then converts them to 3 utf-8 2 byte characters each with 1024 possibilities.
 
-The encoded bytes is 1.5 two times larger than the original binary.
+The encoded bytes is 1.5 times larger than the original binary.
 
 |bits|possibilities|
 |:---|:---|
